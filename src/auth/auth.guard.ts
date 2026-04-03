@@ -20,6 +20,8 @@ export interface TokenPayload {
   sub: string;
   email: string;
   role: string;
+  tenantId: string;
+  tenantSchema: string;
   iat?: number;
   exp?: number;
 }

@@ -6,17 +6,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
-import { PatientModule } from './patient/patient.module';
-import { ScheduleModule } from './schedule/schedule.module';
 import { TenantModule } from './tenant/tenant.module';
+import { AppointmentModule } from './appointment/appointment.module';
 import { AuditModule } from './audit/audit.module';
-import { User } from './user/user.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // forRootAsync garante que o .env já foi carregado antes de conectar
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -28,14 +25,13 @@ import { User } from './user/user.entity';
         password: config.get<string>('DB_PASS', 'admin_password'),
         database: config.get<string>('DB_NAME', 'zc_prontuario'),
         autoLoadEntities: true,
-        synchronize: config.get('NODE_ENV') !== 'production',
+        synchronize: false, // gerenciado por migrations
       }),
     }),
 
     AuthModule,
-    PatientModule,
-    ScheduleModule,
     TenantModule,
+    AppointmentModule,
     AuditModule,
   ],
   controllers: [AppController],
