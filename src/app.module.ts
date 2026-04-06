@@ -14,6 +14,7 @@ import { PatientModule } from './patient/patient.module';
 import { DatabaseModule } from './database/database.module';
 import { CircuitBreakerModule } from './circuit-breaker/circuit-breaker.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { WebhookModule } from './webhook/webhook.module';
     AuditModule,
     PatientModule,
     WebhookModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [

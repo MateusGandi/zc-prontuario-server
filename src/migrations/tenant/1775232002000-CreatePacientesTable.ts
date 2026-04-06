@@ -4,8 +4,15 @@ export class CreatePacientesTable1775232002000 implements MigrationInterface {
   name = 'CreatePacientesTable1775232002000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    const schema = (queryRunner.connection.options as any).schema as string;
+    const exists = await queryRunner.query(
+      `SELECT 1 FROM pg_tables WHERE schemaname = $1 AND tablename = 'pacientes'`,
+      [schema],
+    );
+    if (exists.length > 0) return;
+
     await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "pacientes" (
+      CREATE TABLE "${schema}"."pacientes" (
         "id"               UUID          NOT NULL DEFAULT gen_random_uuid(),
         "full_name"        VARCHAR(200)  NOT NULL,
         "birth_date"       DATE          NOT NULL,
@@ -29,13 +36,14 @@ export class CreatePacientesTable1775232002000 implements MigrationInterface {
         "updated_by"       UUID,
         "created_at"       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
         "updated_at"       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-        CONSTRAINT "PK_pacientes" PRIMARY KEY ("id"),
-        CONSTRAINT "UQ_pacientes_cpf" UNIQUE ("cpf")
+        CONSTRAINT "PK_pacientes_${schema}" PRIMARY KEY ("id"),
+        CONSTRAINT "UQ_pacientes_cpf_${schema}" UNIQUE ("cpf")
       )
     `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE IF EXISTS "pacientes"`);
+    const schema = (queryRunner.connection.options as any).schema as string;
+    await queryRunner.query(`DROP TABLE IF EXISTS "${schema}"."pacientes"`);
   }
 }

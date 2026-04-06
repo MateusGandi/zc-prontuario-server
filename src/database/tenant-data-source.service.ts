@@ -57,12 +57,57 @@ export class TenantDataSourceService implements OnModuleDestroy {
       throw err;
     }
 
-    // Repair: ensure pacientes exists regardless of migration record state
+    // Repair: ensure all tables exist regardless of migration record state
+    await this.ensureAgendamentosTable(ds, tenantSchema);
     await this.ensurePacientesTable(ds, tenantSchema);
     await this.ensureAuditLogsTable(ds, tenantSchema);
 
     this.cache.set(tenantSchema, ds);
     return ds;
+  }
+
+  /**
+   * Idempotent DDL repair — creates agendamentos if absent in the tenant schema.
+   * Covers all fields from both CreateTenantSchema and AddAppointmentFields migrations.
+   */
+  private async ensureAgendamentosTable(
+    ds: DataSource,
+    tenantSchema: string,
+  ): Promise<void> {
+    const [row] = await ds.query<{ exists: boolean }[]>(
+      `SELECT EXISTS (
+         SELECT 1 FROM pg_tables
+         WHERE schemaname = $1 AND tablename = 'agendamentos'
+       ) AS "exists"`,
+      [tenantSchema],
+    );
+
+    if (String(row?.exists) === 'true') {
+      return;
+    }
+
+    this.logger.warn(
+      `[${tenantSchema}] agendamentos table missing — running DDL repair`,
+    );
+    await ds.query(`
+      CREATE TABLE "${tenantSchema}"."agendamentos" (
+        "id"             UUID          NOT NULL DEFAULT gen_random_uuid(),
+        "patient_name"   VARCHAR(200)  NOT NULL,
+        "professional"   VARCHAR(200),
+        "procedure_type" VARCHAR(200),
+        "scheduled_at"   TIMESTAMPTZ   NOT NULL,
+        "end_at"         TIMESTAMPTZ,
+        "status"         VARCHAR(30)   NOT NULL DEFAULT 'agendado',
+        "origin"         VARCHAR(100),
+        "notes"          TEXT,
+        "created_by"     UUID,
+        "updated_by"     UUID,
+        "created_at"     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+        "updated_at"     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+        CONSTRAINT "PK_agendamentos_${tenantSchema}" PRIMARY KEY ("id")
+      )
+    `);
+    this.logger.log(`[${tenantSchema}] agendamentos DDL repair complete.`);
   }
 
   /**

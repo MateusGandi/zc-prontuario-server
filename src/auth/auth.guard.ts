@@ -19,6 +19,7 @@ export const IS_SUPER_ADMIN_KEY = 'isSuperAdmin';
 // ─── Payload do token ─────────────────────────────────────────────────────────
 export interface TokenPayload {
   sub: string;
+  name: string;
   email: string;
   role: string;
   tenantId: string;

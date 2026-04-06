@@ -103,6 +103,7 @@ export class AuthService {
   private sign(user: User, schemaName: string) {
     const payload: TokenPayload = {
       sub: user.id,
+      name: user.name,
       email: user.email,
       role: user.role,
       tenantId: user.tenantId,
