@@ -49,8 +49,24 @@ export class AuthService {
     });
 
     // 2. Criar schema PostgreSQL e aplicar migrations do tenant
-    await this.dataSource.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
-    await this.tenantDs.applyMigrations(schemaName);
+    //    Se falhar, desfaz o tenant e usuário para evitar dado pela metade
+    try {
+      await this.dataSource.query(
+        `CREATE SCHEMA IF NOT EXISTS "${schemaName}"`,
+      );
+      await this.tenantDs.applyMigrations(schemaName);
+    } catch (err) {
+      await this.dataSource.query(`DELETE FROM "users" WHERE id = $1`, [
+        savedUser.id,
+      ]);
+      await this.dataSource.query(`DELETE FROM "tenants" WHERE id = $1`, [
+        tenantId,
+      ]);
+      await this.dataSource.query(
+        `DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`,
+      );
+      throw err;
+    }
 
     return this.sign(savedUser, schemaName);
   }

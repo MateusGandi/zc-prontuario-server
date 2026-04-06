@@ -5,7 +5,7 @@ export class CreateTenantSchema1775232000001 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE "agendamentos" (
+      CREATE TABLE IF NOT EXISTS "agendamentos" (
         "id" UUID NOT NULL DEFAULT gen_random_uuid(),
         "patient_name" VARCHAR(200) NOT NULL,
         "scheduled_at" TIMESTAMPTZ NOT NULL,

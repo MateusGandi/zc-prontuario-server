@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 import { CreateCentralSchema1775232000000 } from '../migrations/central/1775232000000-CreateCentralSchema';
+import { AddUserPhone1775232000002 } from '../migrations/central/1775232000002-AddUserPhone';
+import { CreateWebhookTables1775232003000 } from '../migrations/central/1775232003000-CreateWebhookTables';
 
 dotenv.config();
 
@@ -14,6 +16,10 @@ export default new DataSource({
   database: process.env.DB_NAME ?? 'zc_prontuario',
   schema: 'public',
   entities: [],
-  migrations: [CreateCentralSchema1775232000000],
+  migrations: [
+    CreateCentralSchema1775232000000,
+    AddUserPhone1775232000002,
+    CreateWebhookTables1775232003000,
+  ],
   migrationsTableName: 'central_migrations',
 });

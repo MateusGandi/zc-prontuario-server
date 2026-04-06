@@ -14,6 +14,7 @@ import { Request } from 'express';
 // ─── Chaves dos metadados ─────────────────────────────────────────────────────
 export const IS_PUBLIC_KEY = 'isPublic';
 export const IS_ADMIN_KEY = 'isAdmin';
+export const IS_SUPER_ADMIN_KEY = 'isSuperAdmin';
 
 // ─── Payload do token ─────────────────────────────────────────────────────────
 export interface TokenPayload {
@@ -31,8 +32,11 @@ export interface TokenPayload {
 /** Rota pública — nenhum token é exigido */
 export const IsPublic = () => SetMetadata(IS_PUBLIC_KEY, true);
 
-/** Exige role = "admin" */
+/** Exige role = "ADMIN" */
 export const IsAdmin = () => SetMetadata(IS_ADMIN_KEY, true);
+
+/** Exige role = "SUPER_ADMIN" */
+export const IsSuperAdmin = () => SetMetadata(IS_SUPER_ADMIN_KEY, true);
 
 /**
  * Extrai o usuário autenticado do request.
@@ -75,16 +79,25 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Token inválido ou expirado');
     }
 
-    // 3. Rota admin → exige role
+    // 3. Rota super-admin → exige role SUPER_ADMIN
+    const isSuperAdmin = this.reflector.getAllAndOverride<boolean>(
+      IS_SUPER_ADMIN_KEY,
+      [ctx.getHandler(), ctx.getClass()],
+    );
+    if (isSuperAdmin && payload.role !== 'SUPER_ADMIN') {
+      throw new ForbiddenException('Acesso restrito a super administradores');
+    }
+
+    // 4. Rota admin → exige role ADMIN ou SUPER_ADMIN
     const isAdmin = this.reflector.getAllAndOverride<boolean>(IS_ADMIN_KEY, [
       ctx.getHandler(),
       ctx.getClass(),
     ]);
-    if (isAdmin && payload.role !== 'admin') {
+    if (isAdmin && payload.role !== 'ADMIN' && payload.role !== 'SUPER_ADMIN') {
       throw new ForbiddenException('Acesso restrito a administradores');
     }
 
-    // 4. Injeta o payload no request para uso via @CurrentUser
+    // 5. Injeta o payload no request para uso via @CurrentUser
     (req as any).user = payload;
     return true;
   }

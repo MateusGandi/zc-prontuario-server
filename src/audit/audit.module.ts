@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuditLog } from './audit-log.entity';
-import { AuditSubscriber } from './audit.subscriber';
+import { AuditService } from './audit.service';
+import { AuditController } from './audit.controller';
+import { DatabaseModule } from '../database/database.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AuditLog])],
-  providers: [AuditSubscriber],
-  exports: [TypeOrmModule]
+  imports: [DatabaseModule],
+  providers: [AuditService],
+  controllers: [AuditController],
+  exports: [AuditService],
 })
 export class AuditModule {}

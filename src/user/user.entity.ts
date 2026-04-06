@@ -11,6 +11,7 @@ import {
 import { Tenant } from '../tenant/tenant.entity';
 
 export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   MEDICO = 'MEDICO',
   ATENDENTE = 'ATENDENTE',
@@ -44,7 +45,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.ATENDENTE
+    default: UserRole.ATENDENTE,
   })
   role: UserRole;
 

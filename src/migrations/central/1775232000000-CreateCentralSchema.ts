@@ -6,7 +6,7 @@ export class CreateCentralSchema1775232000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Tenants
     await queryRunner.query(`
-      CREATE TABLE "tenants" (
+      CREATE TABLE IF NOT EXISTS "tenants" (
         "id" UUID NOT NULL DEFAULT gen_random_uuid(),
         "name" VARCHAR(150) NOT NULL,
         "schema_name" VARCHAR(63) NOT NULL,
@@ -20,12 +20,16 @@ export class CreateCentralSchema1775232000000 implements MigrationInterface {
 
     // User role enum
     await queryRunner.query(
-      `CREATE TYPE "public"."user_role" AS ENUM ('ADMIN', 'MEDICO', 'ATENDENTE')`,
+      `DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+          CREATE TYPE "public"."user_role" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'MEDICO', 'ATENDENTE');
+        END IF;
+      END $$`,
     );
 
     // Users
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" UUID NOT NULL DEFAULT gen_random_uuid(),
         "tenantId" UUID NOT NULL,
         "name" VARCHAR(150) NOT NULL,
@@ -45,7 +49,7 @@ export class CreateCentralSchema1775232000000 implements MigrationInterface {
 
     // Audit logs (schema central)
     await queryRunner.query(`
-      CREATE TABLE "audit_logs" (
+      CREATE TABLE IF NOT EXISTS "audit_logs" (
         "id" UUID NOT NULL DEFAULT gen_random_uuid(),
         "tableName" VARCHAR(150) NOT NULL,
         "recordId" UUID NOT NULL,
